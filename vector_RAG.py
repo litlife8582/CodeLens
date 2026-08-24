@@ -11,6 +11,9 @@ from dotenv import load_dotenv
 
 load_dotenv()   
 
+llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.0)
+embeddings = GoogleGenerativeAIEmbeddings(model="gemini-embedding-2-preview")
+
 #Loading data
 print("Loading documents from 'data/' directory...")
 loader = DirectoryLoader("data", glob="**/*.*")
@@ -32,3 +35,36 @@ vectorstore = Chroma.from_documents(
 )
 
 retriever = vectorstore.as_retriever(search_kwargs={"k": 3})
+
+#setting up prompt template
+system_prompt = (
+    "Use the given context to answer the question. "
+    "If you don't know the answer, say you don't know. "
+    "Context: {context}"
+)
+
+prompt = ChatPromptTemplate.from_messages([
+    ("system", system_prompt),
+    ("human", "{input}"),
+])
+
+#Retrieval chain
+print("Building the retrieval chain...")
+question_answer_chain = create_stuff_documents_chain(llm, prompt)
+rag_chain = create_retrieval_chain(retriever, question_answer_chain)
+
+#query execution
+query = "What is the primary function of the auth module?"
+print(f"\nExecuting Query: '{query}'\n")
+
+response = rag_chain.invoke({"input": query})
+
+
+#output
+print("--- ANSWER ---")
+print(response["answer"])
+
+print("\n--- RETRIEVED CONTEXT CHUNKS ---")
+for i, doc in enumerate(response["context"]):
+    print(f"\n[Chunk {i+1}]")
+    print(doc.page_content)
