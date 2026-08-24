@@ -1,5 +1,5 @@
 import os
-from langchain_community.document_loaders import DirectoryLoader
+from langchain_community.document_loaders import DirectoryLoader, TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_chroma import Chroma
 from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
@@ -11,12 +11,17 @@ from dotenv import load_dotenv
 
 load_dotenv()   
 
-llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.0)
+llm = ChatGoogleGenerativeAI(model="gemini-3.6-flash", temperature=0.0)
 embeddings = GoogleGenerativeAIEmbeddings(model="gemini-embedding-2-preview")
 
 #Loading data
 print("Loading documents from 'data/' directory...")
-loader = DirectoryLoader("data", glob="**/*.*")
+loader = DirectoryLoader(
+    "data", 
+    glob="**/*.*", 
+    loader_cls=TextLoader, 
+    loader_kwargs={"encoding": "utf-8"}
+)
 docs = loader.load()
 
 #text splitting
@@ -53,18 +58,31 @@ print("Building the retrieval chain...")
 question_answer_chain = create_stuff_documents_chain(llm, prompt)
 rag_chain = create_retrieval_chain(retriever, question_answer_chain)
 
-#query execution
-query = "What is the primary function of the auth module?"
-print(f"\nExecuting Query: '{query}'\n")
+#taking query as input from user
+print("\n--- Vector-RAG System Ready ---")
+print("Type 'exit' or 'quit' to stop.\n")
 
-response = rag_chain.invoke({"input": query})
+while True:
+    query=input("\nAsk a question about your codebase: ")
+    
+    if query.lower() in ['exit', 'quit']:
+        print("Shutting down...")
+        break
+        
+    if not query.strip():
+        continue
+        
+    print(f"\nProcessing query...\n")
+    response = rag_chain.invoke({"input": query})
 
 
 #output
-print("--- ANSWER ---")
+print("---ANSWER---")
 print(response["answer"])
 
-print("\n--- RETRIEVED CONTEXT CHUNKS ---")
+print("\n---RETRIEVED CONTEXT CHUNKS---")
 for i, doc in enumerate(response["context"]):
     print(f"\n[Chunk {i+1}]")
     print(doc.page_content)
+
+print("\n"+"*"*50)
