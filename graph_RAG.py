@@ -5,7 +5,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_neo4j import Neo4jGraph, LLMGraphTransformer, GraphCypherQAChain
 
-load_dotenv()
+load_dotenv(override=True)
 
 print("Connecting to Neo4j...")
 graph = Neo4jGraph(
