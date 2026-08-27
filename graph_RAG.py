@@ -7,11 +7,18 @@ from langchain_neo4j import Neo4jGraph, LLMGraphTransformer, GraphCypherQAChain
 
 load_dotenv(override=True)
 
+load_dotenv(override=True)
+print("URI:", repr(os.getenv("NEO4J_URI")))
+print("USER:", repr(os.getenv("NEO4J_USERNAME")))
+print("PASS LEN:", len(os.getenv("NEO4J_PASSWORD") or ""))
+print("PASS REPR:", repr(os.getenv("NEO4J_PASSWORD")))
+
 print("Connecting to Neo4j...")
 graph = Neo4jGraph(
     url=os.getenv("NEO4J_URI"),
     username=os.getenv("NEO4J_USERNAME"),
-    password=os.getenv("NEO4J_PASSWORD")
+    password=os.getenv("NEO4J_PASSWORD"),
+    database=os.getenv("NEO4J_DATABASE")
 )
 
 llm = ChatGoogleGenerativeAI(model="gemini-3.6-flash", temperature=0.0)
