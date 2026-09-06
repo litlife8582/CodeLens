@@ -1,6 +1,6 @@
 import json
+import time  # <-- NEW: Import the time module
 from vector_RAG_callable import run_vector_rag
-# NEW: Import your newly created AST Graph RAG function
 from ast_graph_rag_callable import run_ast_graph_rag 
 from evaluate_hallucination import evaluate_rag_output
 
@@ -14,14 +14,26 @@ print(f"Running Showdown for Query: '{test_query}'\n")
 # ==========================================
 print("Fetching Vector-RAG response...")
 v_context, v_answer = run_vector_rag(test_query)
+
+print("\n[Sleeping for 10 seconds to respect API rate limits...]\n")
+time.sleep(10)
+
+print("Evaluating Vector-RAG...")
 vector_report = evaluate_rag_output("Vector-RAG", test_query, v_context, v_answer)
+
+print("\n[Sleeping for 10 seconds to respect API rate limits...]\n")
+time.sleep(10)
 
 # ==========================================
 # 2. AST Graph-RAG Evaluation
 # ==========================================
 print("Fetching AST Graph-RAG response...")
-# NEW: Call the deterministic AST function
 g_context, g_answer = run_ast_graph_rag(test_query) 
+
+print("\n[Sleeping for 10 seconds to respect API rate limits...]\n")
+time.sleep(10)
+
+print("Evaluating AST-Graph-RAG...")
 graph_report = evaluate_rag_output("AST-Graph-RAG", test_query, g_context, g_answer)
 
 # ==========================================
