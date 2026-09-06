@@ -1,0 +1,16 @@
+[
+  {
+    "system": "Vector-RAG",
+    "score": 1.0,
+    "total_claims": 6,
+    "verified_claims": 6,
+    "diagnoses": []
+  },
+  {
+    "system": "Graph-RAG",
+    "score": 1.0,
+    "total_claims": 2,
+    "verified_claims": 2,
+    "diagnoses": []
+  }
+]
