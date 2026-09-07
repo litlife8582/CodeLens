@@ -1,7 +1,7 @@
 import json
-import time  # <-- NEW: Import the time module
-from vector_RAG_callable import run_vector_rag
-from ast_graph_rag_callable import run_ast_graph_rag 
+import time
+from Vector_RAG.Vector_RAG_query import run_vector_rag
+from Graph_RAG.Graph_RAG_query import run_ast_graph_rag 
 from evaluate_hallucination import evaluate_rag_output
 
 # Define the complex multi-hop query

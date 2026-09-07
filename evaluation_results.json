@@ -7,10 +7,16 @@
     "diagnoses": []
   },
   {
-    "system": "Graph-RAG",
-    "score": 1.0,
+    "system": "AST-Graph-RAG",
+    "score": 0.5,
     "total_claims": 2,
-    "verified_claims": 2,
-    "diagnoses": []
+    "verified_claims": 1,
+    "diagnoses": [
+      {
+        "unsupported_claim": "No props are passed to the Header component.",
+        "severity": "Questionable",
+        "diagnosis": "The claim asserts that no props are passed to the Header component, but the context only confirms the rendering relationship between App and Header. The factual accuracy cannot be determined without seeing the component definition or AST context."
+      }
+    ]
   }
 ]
