@@ -56,14 +56,26 @@ def extract_ast_elements(code_bytes, filename):
             current_func = previous_func
             return 
 
+        # C. Detect JSX Elements / Component Renders & PROPS
         elif node.type == "jsx_opening_element" or node.type == "jsx_self_closing_element":
             name_node = node.child_by_field_name("name")
             if name_node:
                 rendered_elem = name_node.text.decode("utf-8")
+                # Only track custom React components (starts with uppercase)
                 if rendered_elem[0].isupper():
                     nodes.add(("Component", rendered_elem))
                     caller = current_func if current_func else ("File", filename)
                     edges.append((caller, "RENDERS", ("Component", rendered_elem)))
+
+                    # NEW: Extract the props passed to this component
+                    for child in node.children:
+                        if child.type == "jsx_attribute":
+                            prop_name_node = child.child_by_field_name("name")
+                            if prop_name_node:
+                                prop_name = prop_name_node.text.decode("utf-8")
+                                nodes.add(("Prop", prop_name))
+                                # Map the relationship: (Component)-[:PASSED_PROP]->(Prop)
+                                edges.append((("Component", rendered_elem), "PASSED_PROP", ("Prop", prop_name)))
 
         elif node.type == "call_expression":
             func_node = node.child_by_field_name("function")

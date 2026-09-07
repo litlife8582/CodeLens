@@ -5,7 +5,7 @@ from Graph_RAG.Graph_RAG_query import run_ast_graph_rag
 from evaluate_hallucination import evaluate_rag_output
 
 # Define the complex multi-hop query
-test_query = "Which components are rendered inside App.jsx, and what props are passed to them?"
+test_query = "Which component imports and renders Header, and what styling or CSS classes are linked to that parent component?"
 
 print(f"Running Showdown for Query: '{test_query}'\n")
 

@@ -13,9 +13,9 @@
     "verified_claims": 1,
     "diagnoses": [
       {
-        "unsupported_claim": "No props are passed to the Header component.",
+        "unsupported_claim": "No props are passed to the Header component inside App.jsx.",
         "severity": "Questionable",
-        "diagnosis": "The claim asserts that no props are passed to the Header component, but the context only confirms the rendering relationship between App and Header. The factual accuracy cannot be determined without seeing the component definition or AST context."
+        "diagnosis": "The claim asserts that no props are passed to the Header component, but the context only confirms that Header is rendered. Whether props are passed or not cannot be determined without wider codebase context."
       }
     ]
   }
