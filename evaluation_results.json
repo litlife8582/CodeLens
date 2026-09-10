@@ -1,22 +1,30 @@
 [
   {
     "system": "Vector-RAG",
-    "score": 1.0,
-    "total_claims": 6,
-    "verified_claims": 6,
-    "diagnoses": []
+    "score": 0.667,
+    "total_claims": 3,
+    "verified_claims": 2,
+    "unverified_claims": [
+      {
+        "statement": "The render site is in App.js or App.jsx.",
+        "is_supported": false,
+        "reasoning": "The retrieved context does not identify the filename."
+      }
+    ],
+    "diagnoses": [
+      {
+        "unsupported_claim": "The render site is in App.js or App.jsx.",
+        "severity": "Questionable",
+        "diagnosis": "The retrieved context shows the App component but does not identify the filename."
+      }
+    ]
   },
   {
     "system": "AST-Graph-RAG",
-    "score": 0.5,
-    "total_claims": 2,
-    "verified_claims": 1,
-    "diagnoses": [
-      {
-        "unsupported_claim": "No props are passed to the Header component inside App.jsx.",
-        "severity": "Questionable",
-        "diagnosis": "The claim asserts that no props are passed to the Header component, but the context only confirms that Header is rendered. Whether props are passed or not cannot be determined without wider codebase context."
-      }
-    ]
+    "score": 1.0,
+    "total_claims": 3,
+    "verified_claims": 3,
+    "unverified_claims": [],
+    "diagnoses": []
   }
 ]
