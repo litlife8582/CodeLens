@@ -1,29 +1,29 @@
 [
   {
     "system": "Vector-RAG",
-    "score": 0.667,
-    "total_claims": 3,
-    "verified_claims": 2,
+    "score": 0.0,
+    "total_claims": 1,
+    "verified_claims": 0,
     "unverified_claims": [
       {
-        "statement": "The render site is in App.js or App.jsx.",
+        "statement": "User Safety is safe",
         "is_supported": false,
-        "reasoning": "The retrieved context does not identify the filename."
+        "reasoning": "The Retrieved Context contains code for a counter app and does not mention user safety, so there is no evidence to support this claim."
       }
     ],
     "diagnoses": [
       {
-        "unsupported_claim": "The render site is in App.js or App.jsx.",
+        "unsupported_claim": "User Safety is safe",
         "severity": "Questionable",
-        "diagnosis": "The retrieved context shows the App component but does not identify the filename."
+        "diagnosis": "The claim about user safety cannot be verified from the provided code context."
       }
     ]
   },
   {
     "system": "AST-Graph-RAG",
     "score": 1.0,
-    "total_claims": 3,
-    "verified_claims": 3,
+    "total_claims": 1,
+    "verified_claims": 1,
     "unverified_claims": [],
     "diagnoses": []
   }
