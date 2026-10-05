@@ -46,10 +46,10 @@ def clear_data_dir():
 
 def trigger_ingestion():
     # Helper to trigger the ingestion scripts after new files are added
-    print("Triggering Graph Ingestion (Vector disabled due to API limits)...")
-    # p1 = subprocess.Popen(["python", "Vector_RAG/Vector_RAG_ingest.py"])
+    print("Triggering Vector and Graph Ingestion...")
+    p1 = subprocess.Popen(["python", "Vector_RAG/Vector_RAG_ingest.py"])
     p2 = subprocess.Popen(["python", "Graph_RAG/Graph_RAG_ingest.py"])
-    # p1.wait()
+    p1.wait()
     p2.wait()
 
 @app.post("/upload")
@@ -116,11 +116,9 @@ async def api_generate_code(req: FeatureRequest):
 async def query_codebase(req: QueryRequest):
     test_query = req.query
     
-    # Run Vector RAG (Disabled to save tokens)
+    # Run Vector RAG
     try:
-        # v_context, v_answer = run_vector_rag(test_query)
-        v_answer = "Vector-RAG disabled to save API tokens. Enjoy Graph-RAG!"
-        v_context = "[]"
+        v_context, v_answer = run_vector_rag(test_query)
     except Exception as e:
         v_answer = "API Error"
         v_context = "[]"
