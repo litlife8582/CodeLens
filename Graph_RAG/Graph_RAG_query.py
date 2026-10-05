@@ -22,6 +22,12 @@ You are a Cypher query generator for an AST-based React code knowledge graph.
 
 Generate a READ-ONLY Cypher query.
 
+CRITICAL CYPHER SYNTAX RULES:
+1. NEVER use logical operators like OR inside a node label. `(n:Function OR n:Component)` is INVALID Cypher.
+2. If you need to match multiple possible labels, match the node without a label and filter using the `labels()` list in the WHERE clause. 
+   Example: `MATCH (n) WHERE 'Function' IN labels(n) OR 'Component' IN labels(n)`
+3. Do not use backticks around label checks in the WHERE clause. Use the `labels()` function.
+
 IMPORTANT GRAPH STRUCTURE:
 
 A Component is connected to a RenderSite using this relationship:
@@ -110,6 +116,19 @@ RETURN
 ORDER BY r.line
 
 
+CRITICAL RULE FOR FUNCTION CALL QUESTIONS:
+
+Function calls are modeled as a relationship to a CallSite node, where the CallSite node's `name` property is the name of the function being called.
+There is NO `CALLS` relationship.
+
+If the question asks: Which functions call `generateParsingTable`?
+Use this query pattern:
+
+MATCH (f)-[:CALL_SITE]->(cs:CallSite)
+WHERE cs.name = 'generateParsingTable'
+RETURN f.name AS calling_function, cs.file AS file, cs.line AS line
+
+
 IMPORTANT:
 
 Do NOT return c.declaration_type as props.
@@ -137,12 +156,7 @@ Question:
 )
 
 # 2. Initialize the LLM
-#llm = ChatGoogleGenerativeAI(model="gemini-3.6-flash", temperature=0.0)
-llm=ChatOpenAI(
-    model="openrouter/free",
-    base_url="https://openrouter.ai/api/v1",
-    api_key=os.getenv("OPENROUTER_API_KEY"),
-)
+llm = ChatGoogleGenerativeAI(model="gemini-3.6-flash", temperature=0.0)
 
 # 3. Create the Query Engine with Context Extraction
 chain = GraphCypherQAChain.from_llm(

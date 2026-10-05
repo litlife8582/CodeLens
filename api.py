@@ -21,29 +21,134 @@ app.add_middleware(
 class QueryRequest(BaseModel):
     query: str
 
+import zipfile
+import shutil
+import os
+import subprocess
+from pathlib import Path
+from urllib.parse import urlparse
+
+# Ensure data directory exists
+DATA_DIR = Path("data")
+DATA_DIR.mkdir(exist_ok=True)
+
+class GithubRepoRequest(BaseModel):
+    repo_url: str
+
+def clear_data_dir():
+    # Helper to wipe the data directory clean before a new codebase is uploaded
+    for item in DATA_DIR.iterdir():
+        if item.is_file():
+            item.unlink()
+        elif item.is_dir():
+            shutil.rmtree(item)
+    print("Cleared data directory.")
+
+def trigger_ingestion():
+    # Helper to trigger the ingestion scripts after new files are added
+    print("Triggering Vector and Graph Ingestion...")
+    p1 = subprocess.Popen(["python", "Vector_RAG/Vector_RAG_ingest.py"])
+    p2 = subprocess.Popen(["python", "Graph_RAG/Graph_RAG_ingest.py"])
+    p1.wait()
+    p2.wait()
+
 @app.post("/upload")
 async def upload_codebase(file: UploadFile = File(...)):
-    # Mock implementation of codebase upload to simulate the processing step
-    return {"message": f"Successfully uploaded {file.filename}. Processing into AST Graph and Vector DB..."}
+    clear_data_dir()
+    # 1. Save the uploaded ZIP file
+    file_location = DATA_DIR / file.filename
+    with open(file_location, "wb") as f:
+        shutil.copyfileobj(file.file, f)
+    
+    # 2. Extract the ZIP file
+    if file.filename.endswith(".zip"):
+        extract_dir = DATA_DIR / file.filename.replace(".zip", "")
+        extract_dir.mkdir(exist_ok=True)
+        with zipfile.ZipFile(file_location, 'r') as zip_ref:
+            zip_ref.extractall(extract_dir)
+        # Remove the zip file after extraction
+        os.remove(file_location)
+        
+        trigger_ingestion()
+        return {"message": f"Successfully extracted {file.filename} into {extract_dir}. Background ingestion started."}
+    else:
+        # If it's a single file
+        trigger_ingestion()
+        return {"message": f"Successfully saved {file.filename}. Background ingestion started."}
+
+@app.post("/upload-github")
+async def upload_github_repo(req: GithubRepoRequest):
+    repo_url = req.repo_url.strip()
+    if not repo_url.startswith("https://github.com/"):
+        return {"error": "Invalid GitHub URL"}
+    
+    # Extract repo name
+    parsed = urlparse(repo_url)
+    repo_name = parsed.path.strip("/").split("/")[-1]
+    if repo_name.endswith(".git"):
+        repo_name = repo_name[:-4]
+        
+    clear_data_dir()
+    target_dir = DATA_DIR / repo_name
+    
+    if target_dir.exists():
+        return {"message": f"Repository {repo_name} already exists. Triggering re-ingestion."}
+        
+    # Clone the repository
+    try:
+        subprocess.run(["git", "clone", repo_url, str(target_dir)], check=True)
+        trigger_ingestion()
+        return {"message": f"Successfully cloned {repo_name}. Background ingestion started."}
+    except subprocess.CalledProcessError as e:
+        return {"error": f"Failed to clone repository: {str(e)}"}
+
+from code_agent import generate_feature_code
+
+class FeatureRequest(BaseModel):
+    request: str
+
+@app.post("/generate-code")
+async def api_generate_code(req: FeatureRequest):
+    code = generate_feature_code(req.request)
+    return {"generated_code": code}
 
 @app.post("/query")
 async def query_codebase(req: QueryRequest):
     test_query = req.query
     
     # Run Vector RAG
-    v_context, v_answer = run_vector_rag(test_query)
-    vector_report = evaluate_rag_output("Vector-RAG", test_query, v_context, v_answer)
+    try:
+        v_context, v_answer = run_vector_rag(test_query)
+    except Exception as e:
+        v_answer = f"Vector-RAG API Error: {str(e)}"
+        v_context = "[]"
+    
+    try:
+        vector_report = evaluate_rag_output("Vector-RAG", test_query, v_context, v_answer)
+    except Exception as e:
+        print(f"Skipping RAGAS Evaluation due to API limit: {e}")
+        vector_report = {"score": 0, "total_claims": 1, "unverified_claims": []}
+        
     vector_report["answer"] = v_answer
     vector_report["accuracy_score"] = vector_report.get("score", 0)
     
-    # Calculate hallucination score as the ratio of unverified claims to total claims
     v_total = vector_report.get("total_claims", 1)
     v_total = v_total if v_total > 0 else 1
     vector_report["hallucination_score"] = round(len(vector_report.get("unverified_claims", [])) / v_total, 2)
     
     # Run AST Graph RAG
-    g_context, g_answer = run_ast_graph_rag(test_query) 
-    graph_report = evaluate_rag_output("AST-Graph-RAG", test_query, g_context, g_answer)
+    try:
+        g_context, g_answer = run_ast_graph_rag(test_query) 
+    except Exception as e:
+        g_context = "[]"
+        g_answer = f"Graph-RAG Generation API Error: {str(e)}"
+        
+    try:
+        graph_report = evaluate_rag_output("AST-Graph-RAG", test_query, g_context, g_answer)
+    except Exception as e:
+        print(f"Skipping RAGAS Evaluation due to API limit: {e}")
+        graph_report = {"score": 0, "total_claims": 1, "unverified_claims": []}
+        
     graph_report["answer"] = g_answer
     graph_report["accuracy_score"] = graph_report.get("score", 0)
     

@@ -1,0 +1,13 @@
+neo4j
+python-dotenv
+tree-sitter
+tree-sitter-c
+tree-sitter-cpp
+tree-sitter-java
+tree-sitter-python
+tree-sitter-c-sharp
+tree-sitter-go
+tree-sitter-sql
+tree-sitter-kotlin
+tree-sitter-javascript
+tree-sitter-typescript

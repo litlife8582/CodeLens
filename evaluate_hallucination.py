@@ -166,7 +166,7 @@ def invoke_json_evaluator(prompt: str, label: str, retries: int = 2) -> dict:
             last_error = e
 
             print(
-                f"\n⚠️ {label} evaluator attempt "
+                f"\n[WARNING] {label} evaluator attempt "
                 f"{attempt} failed: {e}"
             )
 
