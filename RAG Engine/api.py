@@ -46,10 +46,10 @@ def clear_data_dir():
 
 def trigger_ingestion():
     # Helper to trigger the ingestion scripts after new files are added
-    print("Triggering Vector and Graph Ingestion...")
-    p1 = subprocess.Popen(["python", "Vector_RAG/Vector_RAG_ingest.py"])
+    print("Triggering Graph Ingestion (Vector disabled due to API limits)...")
+    # p1 = subprocess.Popen(["python", "Vector_RAG/Vector_RAG_ingest.py"])
     p2 = subprocess.Popen(["python", "Graph_RAG/Graph_RAG_ingest.py"])
-    p1.wait()
+    # p1.wait()
     p2.wait()
 
 @app.post("/upload")
@@ -116,25 +116,19 @@ async def api_generate_code(req: FeatureRequest):
 async def query_codebase(req: QueryRequest):
     test_query = req.query
     
-    # Run Vector RAG
+    # Run Vector RAG (Disabled to save tokens)
     try:
-        v_context, v_answer = run_vector_rag(test_query)
+        # v_context, v_answer = run_vector_rag(test_query)
+        v_answer = "Vector-RAG disabled to save API tokens. Enjoy Graph-RAG!"
+        v_context = "[]"
     except Exception as e:
-        v_answer = f"Vector-RAG API Error: {str(e)}"
+        v_answer = "API Error"
         v_context = "[]"
     
-    try:
-        vector_report = evaluate_rag_output("Vector-RAG", test_query, v_context, v_answer)
-    except Exception as e:
-        print(f"Skipping RAGAS Evaluation due to API limit: {e}")
-        vector_report = {"score": 0, "total_claims": 1, "unverified_claims": []}
-        
+    vector_report = {"score": 0, "total_claims": 1, "unverified_claims": []}
     vector_report["answer"] = v_answer
-    vector_report["accuracy_score"] = vector_report.get("score", 0)
-    
-    v_total = vector_report.get("total_claims", 1)
-    v_total = v_total if v_total > 0 else 1
-    vector_report["hallucination_score"] = round(len(vector_report.get("unverified_claims", [])) / v_total, 2)
+    vector_report["accuracy_score"] = 0
+    vector_report["hallucination_score"] = 0
     
     # Run AST Graph RAG
     try:
