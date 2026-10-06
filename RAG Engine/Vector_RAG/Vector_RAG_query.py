@@ -10,13 +10,13 @@ from dotenv import load_dotenv
 
 load_dotenv() 
 
-#llm = ChatGoogleGenerativeAI(model="gemini-3.6-flash", temperature=0.0)
+llm = ChatGoogleGenerativeAI(model="gemini-3.6-flash", temperature=0.0)
 
-llm = ChatOpenAI(
-    model="openrouter/free",
-    base_url="https://openrouter.ai/api/v1",
-    api_key=os.getenv("OPENROUTER_API_KEY"),
-)
+# llm = ChatOpenAI(
+#     model="openrouter/free",
+#     base_url="https://openrouter.ai/api/v1",
+#     api_key=os.getenv("OPENROUTER_API_KEY"),
+# )
 embeddings = GoogleGenerativeAIEmbeddings(model="gemini-embedding-2-preview")
 
 # Connect directly to the existing database

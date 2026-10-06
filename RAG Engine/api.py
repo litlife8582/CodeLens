@@ -35,13 +35,23 @@ DATA_DIR.mkdir(exist_ok=True)
 class GithubRepoRequest(BaseModel):
     repo_url: str
 
+import stat
+
+def on_rm_error(func, path, exc):
+    os.chmod(path, stat.S_IWRITE)
+    func(path)
+
 def clear_data_dir():
     # Helper to wipe the data directory clean before a new codebase is uploaded
     for item in DATA_DIR.iterdir():
         if item.is_file():
-            item.unlink()
+            try:
+                item.unlink()
+            except PermissionError:
+                os.chmod(item, stat.S_IWRITE)
+                item.unlink()
         elif item.is_dir():
-            shutil.rmtree(item)
+            shutil.rmtree(item, onexc=on_rm_error)
     print("Cleared data directory.")
 
 def trigger_ingestion():
@@ -120,13 +130,21 @@ async def query_codebase(req: QueryRequest):
     try:
         v_context, v_answer = run_vector_rag(test_query)
     except Exception as e:
-        v_answer = "API Error"
+        v_answer = f"API Error: {str(e)}"
         v_context = "[]"
     
-    vector_report = {"score": 0, "total_claims": 1, "unverified_claims": []}
+    try:
+        vector_report = evaluate_rag_output("Vector-RAG", test_query, v_context, v_answer)
+    except Exception as e:
+        print(f"Skipping RAGAS Evaluation for Vector RAG due to API limit: {e}")
+        vector_report = {"score": 0, "total_claims": 1, "unverified_claims": []}
+        
     vector_report["answer"] = v_answer
-    vector_report["accuracy_score"] = 0
-    vector_report["hallucination_score"] = 0
+    vector_report["accuracy_score"] = vector_report.get("score", 0)
+    
+    v_total = vector_report.get("total_claims", 1)
+    v_total = v_total if v_total > 0 else 1
+    vector_report["hallucination_score"] = round(len(vector_report.get("unverified_claims", [])) / v_total, 2)
     
     # Run AST Graph RAG
     try:

@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import { Upload, Search, Code2, Database, Network, Activity, Zap, CheckCircle, AlertTriangle, GitBranch, Send, Bot, User, Wand2 } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
+import ReactMarkdown from 'react-markdown';
 
 function App() {
   const [file, setFile] = useState(null);
@@ -264,14 +265,18 @@ function App() {
                     <div className={`p-4 rounded-2xl text-sm ${msg.type === 'user' ? 'bg-primary text-white rounded-tr-sm' : 'bg-surface border border-border text-slate-300 rounded-tl-sm'}`}>
                       {msg.type === 'bot' && !msg.error ? (
                         msg.mode === 'showdown' ? (
-                         <div className="flex flex-col gap-4">
+                         <div className="flex flex-col gap-4 w-full">
                             <div>
                               <div className="text-xs font-semibold text-emerald-400 mb-1 flex items-center gap-1"><Network size={12}/> AST Graph-RAG Answer:</div>
-                              <p className="whitespace-pre-wrap leading-relaxed">{msg.graphText}</p>
+                              <div className="prose prose-sm prose-invert max-w-none prose-p:leading-relaxed prose-pre:bg-slate-900 prose-pre:border-border text-slate-300">
+                                <ReactMarkdown>{msg.graphText}</ReactMarkdown>
+                              </div>
                             </div>
                             <div className="border-t border-border/50 pt-3">
                               <div className="text-xs font-semibold text-blue-400 mb-1 flex items-center gap-1"><Database size={12}/> Vector-RAG Answer:</div>
-                              <p className="whitespace-pre-wrap leading-relaxed">{msg.vectorText}</p>
+                              <div className="prose prose-sm prose-invert max-w-none prose-p:leading-relaxed prose-pre:bg-slate-900 prose-pre:border-border text-slate-300">
+                                <ReactMarkdown>{msg.vectorText}</ReactMarkdown>
+                              </div>
                             </div>
                          </div>
                         ) : (
@@ -281,7 +286,9 @@ function App() {
                           </div>
                         )
                       ) : (
-                        <p className="whitespace-pre-wrap leading-relaxed">{msg.text}</p>
+                        <div className="prose prose-sm prose-invert max-w-none prose-p:leading-relaxed text-slate-300">
+                          <ReactMarkdown>{msg.text}</ReactMarkdown>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -366,6 +373,31 @@ function App() {
                     <ScoreCard title="Accuracy" score={activeMetrics.graph_rag?.accuracy_score} icon={CheckCircle} color="border-emerald-500/30 text-emerald-400 bg-emerald-500/5" />
                     <ScoreCard title="Hallucination" score={activeMetrics.graph_rag?.hallucination_score} icon={AlertTriangle} color="border-amber-500/30 text-amber-400 bg-amber-500/5" />
                   </div>
+                  {activeMetrics.graph_rag?.diagnoses && (
+                    <div className="mt-2 text-xs">
+                      <div className="font-semibold text-slate-300 mb-2">FaithJudge Evaluation:</div>
+                      {activeMetrics.graph_rag.diagnoses.length > 0 ? (
+                        <div className="flex flex-col gap-2 max-h-[200px] overflow-y-auto custom-scrollbar pr-1">
+                          {activeMetrics.graph_rag.diagnoses.map((d, i) => (
+                            <div key={i} className="p-2 bg-surface/50 border border-border rounded-lg">
+                              <div className="mb-1">
+                                <span className={`font-semibold mr-1 ${d.severity === 'Unwanted' ? 'text-red-400' : d.severity === 'Questionable' ? 'text-amber-400' : 'text-emerald-400'}`}>
+                                  [{d.severity}]
+                                </span>
+                                <span className="text-slate-300">{d.unsupported_claim}</span>
+                              </div>
+                              <div className="text-slate-400 border-t border-border/50 pt-1">{d.diagnosis}</div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="p-2 bg-surface/50 border border-border rounded-lg flex items-center gap-2 text-emerald-400">
+                          <CheckCircle size={14} />
+                          <span>All claims verified! No hallucinations detected.</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 <div className="w-full h-px bg-border my-2"></div>
@@ -380,6 +412,31 @@ function App() {
                     <ScoreCard title="Accuracy" score={activeMetrics.vector_rag?.accuracy_score} icon={CheckCircle} color="border-blue-500/30 text-blue-400 bg-blue-500/5" />
                     <ScoreCard title="Hallucination" score={activeMetrics.vector_rag?.hallucination_score} icon={AlertTriangle} color="border-amber-500/30 text-amber-400 bg-amber-500/5" />
                   </div>
+                  {activeMetrics.vector_rag?.diagnoses && (
+                    <div className="mt-2 text-xs">
+                      <div className="font-semibold text-slate-300 mb-2">FaithJudge Evaluation:</div>
+                      {activeMetrics.vector_rag.diagnoses.length > 0 ? (
+                        <div className="flex flex-col gap-2 max-h-[200px] overflow-y-auto custom-scrollbar pr-1">
+                          {activeMetrics.vector_rag.diagnoses.map((d, i) => (
+                            <div key={i} className="p-2 bg-surface/50 border border-border rounded-lg">
+                              <div className="mb-1">
+                                <span className={`font-semibold mr-1 ${d.severity === 'Unwanted' ? 'text-red-400' : d.severity === 'Questionable' ? 'text-amber-400' : 'text-emerald-400'}`}>
+                                  [{d.severity}]
+                                </span>
+                                <span className="text-slate-300">{d.unsupported_claim}</span>
+                              </div>
+                              <div className="text-slate-400 border-t border-border/50 pt-1">{d.diagnosis}</div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="p-2 bg-surface/50 border border-border rounded-lg flex items-center gap-2 text-emerald-400">
+                          <CheckCircle size={14} />
+                          <span>All claims verified! No hallucinations detected.</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
               </div>
